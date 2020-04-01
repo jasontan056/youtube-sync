@@ -24,8 +24,8 @@ export function setPlaybackState(playbackState) {
   return { type: SET_PLAYBACK_STATE, playbackState };
 }
 
-export function seekTo(seekPositionSec) {
-  return { type: SEEK_TO, seekPositionSec };
+export function seekTo(seekPosition) {
+  return { type: SEEK_TO, seekPosition };
 }
 
 export function setVideoId(videoId) {
