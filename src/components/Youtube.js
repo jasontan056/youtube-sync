@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import YouTube from "react-youtube";
 import { PlaybackStates } from "../actions";
 
-export default function YoutubeWrapper({
+export default function Youtube({
   onPlaybackStateChange,
   onSeek,
   videoId = "",
@@ -118,7 +118,7 @@ export default function YoutubeWrapper({
   );
 }
 
-YoutubeWrapper.propTypes = {
+Youtube.propTypes = {
   onStateChange: PropTypes.func.isRequired,
   onSeek: PropTypes.func.isRequired,
   videoId: PropTypes.string,

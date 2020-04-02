@@ -1,12 +1,12 @@
 import React from "react";
 import { action } from "@storybook/addon-actions";
-import YoutubeWrapper from "./YoutubeWrapper";
+import Youtube from "./Youtube";
 import { withKnobs, text, number } from "@storybook/addon-knobs";
 import { PlaybackStates } from "../actions";
 
 export default {
-  component: YoutubeWrapper,
-  title: "YoutubeWrapper",
+  component: Youtube,
+  title: "Youtube",
   decorators: [withKnobs],
   // Our exports that end in "Data" are not stories.
   excludeStories: /.*Data$/
@@ -17,10 +17,10 @@ export const actionsData = {
   onSeek: action("onSeek")
 };
 
-export const Default = () => <YoutubeWrapper {...actionsData} />;
+export const Default = () => <Youtube {...actionsData} />;
 
 export const WithAllProps = () => (
-  <YoutubeWrapper
+  <Youtube
     videoId={text("videoId", "qQjMMEWaWsc")}
     playbackState={text("playbackState", PlaybackStates.PLAYING)}
     seekPosition={number("seekPosition", 30)}
