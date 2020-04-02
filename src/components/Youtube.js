@@ -83,7 +83,6 @@ export default function Youtube({
     const interval = 500;
     const margin = 500;
     const checkTime = () => {
-      console.log("in checktime");
       const playerCurrentTime = youtubeTarget.getCurrentTime();
       if (lastTime !== -1) {
         let expectedTime;
