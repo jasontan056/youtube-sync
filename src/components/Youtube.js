@@ -3,6 +3,14 @@ import PropTypes from "prop-types";
 import YouTube from "react-youtube";
 import { PlaybackStates } from "../actions";
 
+// Only change player's seek position if it's off by more than this threshold.
+const SEEK_THRESHOLD_SECONDS = 1;
+// Poll every INTERVAL to check if video position has changed due to a seek.
+const INTERVAL = 500;
+// Margin of acceptable error between expected and actual current video position.
+// Needs to be relatively high because of weirdness when the page isn't in focus.
+const MARGIN = 1500;
+
 export default function Youtube({
   onPlaybackStateChange,
   onSeek,
@@ -12,9 +20,10 @@ export default function Youtube({
   width = 640,
   height = 480
 }) {
-  const [youtubeTarget, setYoutubeTarget] = useState(null);
-
-  const youtubePlayerOpts = {
+  // Hack: Save youtube player opts as state so that changing seekPosition doesn't
+  // cause the youtube player reload.
+  // Note: height and width props aren't respected after initial render.
+  const [youtubePlayerOpts] = useState({
     height: height,
     width: width,
     playerVars: {
@@ -22,7 +31,20 @@ export default function Youtube({
       autoplay: 1,
       start: seekPosition
     }
-  };
+  });
+  const [youtubeTarget, setYoutubeTarget] = useState(null);
+
+  // Update player's seek position if seekPosition prop is updated.
+  useEffect(() => {
+    if (!youtubeTarget) {
+      return;
+    }
+
+    const playerCurrentTime = youtubeTarget.getCurrentTime();
+    if (Math.abs(playerCurrentTime - seekPosition) > SEEK_THRESHOLD_SECONDS) {
+      youtubeTarget.seekTo(seekPosition);
+    }
+  }, [youtubeTarget, seekPosition]);
 
   const onReady = useCallback(event => {
     setYoutubeTarget(event.target);
@@ -80,25 +102,23 @@ export default function Youtube({
 
     let timer = null;
     let lastTime = -1;
-    const interval = 500;
-    const margin = 500;
     const checkTime = () => {
       const playerCurrentTime = youtubeTarget.getCurrentTime();
       if (lastTime !== -1) {
         let expectedTime;
         if (youtubeTarget.getPlayerState() === YouTube.PlayerState.PLAYING) {
-          expectedTime = lastTime + interval / 1000;
+          expectedTime = lastTime + INTERVAL / 1000;
         } else {
           expectedTime = lastTime;
         }
 
-        if (Math.abs(playerCurrentTime - expectedTime) > margin / 1000) {
+        if (Math.abs(playerCurrentTime - expectedTime) > MARGIN / 1000) {
           onSeek(playerCurrentTime);
         }
       }
 
       lastTime = playerCurrentTime;
-      timer = setTimeout(checkTime, interval);
+      timer = setTimeout(checkTime, INTERVAL);
     };
 
     checkTime();
