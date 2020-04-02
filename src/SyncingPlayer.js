@@ -3,6 +3,7 @@ import { createStore } from "redux";
 import { Provider } from "react-redux";
 import syncingPlayerApp from "./reducers";
 import YoutubeLinkContainer from "./containers/YoutubeLinkContainer";
+import YoutubeContainer from "./containers/YoutubeContainer";
 
 const store = createStore(syncingPlayerApp);
 
@@ -14,6 +15,7 @@ export default function SyncingPlayer() {
   return (
     <Provider store={store}>
       <YoutubeLinkContainer />
+      <YoutubeContainer />
     </Provider>
   );
 }
