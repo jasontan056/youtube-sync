@@ -3,10 +3,18 @@ import ReactDOM from "react-dom";
 import "./assets/main.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
+import { createStore } from "redux";
+import syncingPlayerApp from "./reducers";
+
+const store = createStore(syncingPlayerApp);
+
+// !!! Temporary logging to observe changes in the store.
+console.log(store.getState());
+store.subscribe(() => console.log(store.getState()));
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App store={store} />
   </React.StrictMode>,
   document.getElementById("root")
 );
