@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import PropTypes from "prop-types";
 
-export default function TextInput(props) {
+export default function TextInput({ placeholder, ...props }) {
   const [value, setValue] = useState("");
 
   const onChange = useCallback(event => {
@@ -20,7 +20,12 @@ export default function TextInput(props) {
     <form onSubmit={onSubmit}>
       <label>
         Name:
-        <input type="text" value={value} onChange={onChange} />
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+        />
       </label>
       <input type="submit" value="Submit" />
     </form>
@@ -28,5 +33,6 @@ export default function TextInput(props) {
 }
 
 TextInput.propTypes = {
-  onSubmit: PropTypes.func.isRequired
+  onSubmit: PropTypes.func.isRequired,
+  placeholder: PropTypes.string
 };
