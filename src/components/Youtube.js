@@ -119,7 +119,7 @@ export default function Youtube({
 }
 
 Youtube.propTypes = {
-  onStateChange: PropTypes.func.isRequired,
+  onPlaybackStateChange: PropTypes.func.isRequired,
   onSeek: PropTypes.func.isRequired,
   videoId: PropTypes.string,
   playbackState: PropTypes.oneOf(Object.values(PlaybackStates)),
