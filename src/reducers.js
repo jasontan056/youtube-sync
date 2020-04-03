@@ -1,26 +1,91 @@
 import {
+  ClientPlaybackStates,
   PlaybackStates,
-  setPlaybackState,
-  seekTo,
-  setVideoId,
+  clientActionCreators,
+  desiredActionCreators,
+  roomActionCreators,
 } from "./actions";
-import { handleAction } from "redux-actions";
+import { handleAction, handleActions } from "redux-actions";
 import { combineReducers } from "redux";
 
-const playbackState = handleAction(
-  setPlaybackState,
-  (state, { payload: { playbackState } }) => playbackState,
-  PlaybackStates.PAUSED
-);
-const seekPosition = handleAction(
-  seekTo,
-  (state, { payload: { seekPosition } }) => seekPosition,
-  0
-);
-const videoId = handleAction(
-  setVideoId,
-  (state, { payload: { videoId } }) => videoId,
-  null
+const client = combineReducers({
+  playbackState: handleAction(
+    clientActionCreators.setPlaybackState,
+    (state, { payload: { playbackState } }) => playbackState,
+    ClientPlaybackStates.PAUSED
+  ),
+  seekPosition: handleAction(
+    clientActionCreators.seekTo,
+    (state, { payload: { seekPosition } }) => seekPosition,
+    0
+  ),
+  videoId: handleAction(
+    clientActionCreators.setVideoId,
+    (state, { payload: { videoId } }) => videoId,
+    null
+  ),
+});
+
+const desired = combineReducers({
+  playbackState: handleAction(
+    desiredActionCreators.setPlaybackState,
+    (state, { payload: { playbackState } }) => playbackState,
+    PlaybackStates.PAUSED
+  ),
+  seekPosition: handleAction(
+    desiredActionCreators.seekTo,
+    (state, { payload: { seekPosition } }) => seekPosition,
+    0
+  ),
+  videoId: handleAction(
+    desiredActionCreators.setVideoId,
+    (state, { payload: { videoId } }) => videoId,
+    null
+  ),
+});
+
+const usersBuffering = handleActions(
+  {
+    [roomActionCreators.addUserBuffering]: (
+      state,
+      { payload: { userId } }
+    ) => ({
+      ...state,
+      [userId]: true,
+    }),
+    [roomActionCreators.removeUserBuffering]: (
+      state,
+      { payload: { userId } }
+    ) => {
+      const { [userId]: removedVal, ...otherUsers } = state;
+      return otherUsers;
+    },
+  },
+  {}
 );
 
-export default combineReducers({ playbackState, seekPosition, videoId });
+const room = combineReducers({
+  playbackState: handleAction(
+    roomActionCreators.setPlaybackState,
+    (state, { payload: { playbackState } }) => playbackState,
+    PlaybackStates.PAUSED
+  ),
+  seekPosition: handleAction(
+    roomActionCreators.seekTo,
+    (state, { payload: { seekPosition } }) => seekPosition,
+    0
+  ),
+  videoId: handleAction(
+    roomActionCreators.setVideoId,
+    (state, { payload: { videoId } }) => videoId,
+    null
+  ),
+  playStartTimestamp: handleAction(
+    roomActionCreators.setPlayStartTimestamp,
+    (state, { payload: { videoId } }) => videoId,
+    null
+  ),
+  usersBuffering,
+});
+
+export default combineReducers({ client, desired, room });
