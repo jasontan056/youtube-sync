@@ -4,9 +4,9 @@ import "./assets/main.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import { createStore } from "redux";
-import syncingPlayerApp from "./reducers";
+import reducers from "./reducers";
 
-const store = createStore(syncingPlayerApp);
+const store = createStore(reducers);
 
 // !!! Temporary logging to observe changes in the store.
 console.log(store.getState());
