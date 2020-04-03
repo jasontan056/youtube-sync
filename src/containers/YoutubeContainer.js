@@ -1,18 +1,19 @@
 import { connect } from "react-redux";
-import { setPlaybackState, seekTo } from "../actions";
+import { clientActionCreators } from "../actions";
 import Youtube from "../components/Youtube";
 
 const mapStateToProps = (state, ownProps) => ({
-  videoId: state.videoId,
-  playbackState: state.playbackState,
-  seekPosition: state.seekPosition,
+  videoId: state.desired.videoId,
+  playbackState: state.desired.playbackState,
+  seekPosition: state.desired.seekPosition,
   width: ownProps.width,
-  height: ownProps.height
+  height: ownProps.height,
 });
 
-const mapDispatchToProps = dispatch => ({
-  onPlaybackStateChange: state => dispatch(setPlaybackState(state)),
-  onSeek: seekPosition => dispatch(seekTo(seekPosition))
+const mapDispatchToProps = (dispatch) => ({
+  onPlaybackStateChange: (state) =>
+    dispatch(clientActionCreators.setPlaybackState(state)),
+  onSeek: (seekPosition) => dispatch(clientActionCreators.seekTo(seekPosition)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Youtube);

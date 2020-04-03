@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
 import YouTube from "react-youtube";
-import { PlaybackStates } from "../actions";
+import { PlaybackStates, ClientPlaybackStates } from "../actions";
 
 // Only change player's seek position if it's off by more than this threshold.
 const SEEK_THRESHOLD_SECONDS = 1;
@@ -18,7 +18,7 @@ export default function Youtube({
   playbackState = PlaybackStates.PAUSED,
   seekPosition = 0,
   width = 640,
-  height = 480
+  height = 480,
 }) {
   // Hack: Save youtube player opts as state so that changing seekPosition doesn't
   // cause the youtube player reload.
@@ -29,8 +29,8 @@ export default function Youtube({
     playerVars: {
       // https://developers.google.com/youtube/player_parameters
       autoplay: 1,
-      start: seekPosition
-    }
+      start: seekPosition,
+    },
   });
   const [youtubeTarget, setYoutubeTarget] = useState(null);
 
@@ -46,23 +46,26 @@ export default function Youtube({
     }
   }, [youtubeTarget, seekPosition]);
 
-  const onReady = useCallback(event => {
+  const onReady = useCallback((event) => {
     setYoutubeTarget(event.target);
   }, []);
 
+  // React to when the youtube player's state changes.
   const onStateChange = useCallback(
-    event => {
+    (event) => {
       let newPlaybackState;
       switch (event.data) {
         case YouTube.PlayerState.PLAYING:
-          newPlaybackState = PlaybackStates.PLAYING;
+          newPlaybackState = ClientPlaybackStates.PLAYING;
+          break;
+        case YouTube.PlayerState.PAUSED:
+          newPlaybackState = ClientPlaybackStates.PAUSED;
           break;
         case YouTube.PlayerState.BUFFERING:
-          newPlaybackState = PlaybackStates.BUFFERING;
+          newPlaybackState = ClientPlaybackStates.BUFFERING;
           break;
         default:
-          // Every other state is just interpreted as paused.
-          newPlaybackState = PlaybackStates.PAUSED;
+          newPlaybackState = ClientPlaybackStates.OTHER;
       }
 
       onPlaybackStateChange(newPlaybackState);
@@ -70,6 +73,7 @@ export default function Youtube({
     [onPlaybackStateChange]
   );
 
+  // Control the youtube player based on the playbackState prop.
   useEffect(() => {
     if (!youtubeTarget) {
       return;
@@ -144,5 +148,5 @@ Youtube.propTypes = {
   playbackState: PropTypes.oneOf(Object.values(PlaybackStates)),
   seekPosition: PropTypes.number,
   width: PropTypes.number,
-  height: PropTypes.number
+  height: PropTypes.number,
 };
