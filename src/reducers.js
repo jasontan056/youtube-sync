@@ -89,7 +89,7 @@ const room = combineReducers({
   ),
   playStartTimestamp: handleAction(
     roomActionCreators.setPlayStartTimestamp,
-    (state, { payload: { videoId } }) => videoId,
+    (state, { payload: { playStartTimestamp } }) => playStartTimestamp,
     null
   ),
   usersBuffering,
