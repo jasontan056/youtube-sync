@@ -1,11 +1,11 @@
 import React from "react";
-import DbChangeSyncer from "./DbChangeSyncer";
+import DbToStoreSyncer from "./DbToStoreSyncer";
 import RoomStateReconciler from "./RoomStateReconciler";
 
 function FirebasePlayerSyncContainer(props) {
   return (
     <div>
-      <DbChangeSyncer />
+      <DbToStoreSyncer />
       <RoomStateReconciler />
     </div>
   );

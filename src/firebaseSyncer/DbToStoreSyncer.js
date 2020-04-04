@@ -8,7 +8,7 @@ import Firebase from "../Firebase";
  * Listens to room state changes in the Firebase DB and updates the room state
  * in Redux.
  */
-export const DbChangeSyncer = ({
+export const DbToStoreSyncer = ({
   roomId,
   onVideoIdChange,
   onPlaybackStateChange,
@@ -81,10 +81,10 @@ export const DbChangeSyncer = ({
     onVideoIdChange,
     roomId,
   ]);
-  return <div>dbChangeSyncer</div>;
+  return <div>DbToStoreSyncer</div>;
 };
 
-DbChangeSyncer.propTypes = {
+DbToStoreSyncer.propTypes = {
   roomId: PropTypes.string.isRequired,
   onVideoIdChange: PropTypes.func.isRequired,
   onPlaybackStateChange: PropTypes.func.isRequired,
@@ -113,4 +113,4 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch(roomActionCreators.removeUserBuffering(userId)),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(DbChangeSyncer);
+export default connect(mapStateToProps, mapDispatchToProps)(DbToStoreSyncer);
