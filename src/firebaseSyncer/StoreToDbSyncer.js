@@ -54,6 +54,7 @@ export const StoreToDbSyncer = ({
           // no-op
         } else {
           const userBufferRef = roomRef.child("usersBuffering").push();
+          userBufferRef.onDisconnect().remove();
           setUserId(userBufferRef.key);
           userBufferRef.set(true);
         }
