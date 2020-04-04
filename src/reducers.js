@@ -1,12 +1,19 @@
 import {
   ClientPlaybackStates,
   PlaybackStates,
+  setRoomId,
   clientActionCreators,
   desiredActionCreators,
   roomActionCreators,
 } from "./actions";
 import { handleAction, handleActions } from "redux-actions";
 import { combineReducers } from "redux";
+
+const roomId = handleAction(
+  setRoomId,
+  (state, { payload: { roomId } }) => roomId,
+  null
+);
 
 const client = combineReducers({
   playbackState: handleAction(
@@ -88,4 +95,4 @@ const room = combineReducers({
   usersBuffering,
 });
 
-export default combineReducers({ client, desired, room });
+export default combineReducers({ roomId, client, desired, room });

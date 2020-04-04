@@ -21,10 +21,12 @@ export const PlaybackStates = {
  * Action creators
  */
 export const {
+  setRoomId,
   client: clientActionCreators,
   desired: desiredActionCreators,
   room: roomActionCreators,
 } = createActions({
+  SET_ROOM_ID: (roomId) => ({ roomId }),
   CLIENT: {
     SET_PLAYBACK_STATE: (playbackState) => ({ playbackState }),
     SEEK_TO: (seekPosition) => ({ seekPosition }),
