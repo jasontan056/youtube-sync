@@ -3,7 +3,7 @@ import DbToStoreSyncer from "./DbToStoreSyncer";
 import RoomStateReconciler from "./RoomStateReconciler";
 import { StoreToDbSyncer } from "./StoreToDbSyncer";
 
-function FirebasePlayerSyncContainer(props) {
+function FirebasePlayerSyncContainer() {
   return (
     <div>
       <DbToStoreSyncer />
@@ -12,7 +12,5 @@ function FirebasePlayerSyncContainer(props) {
     </div>
   );
 }
-
-FirebasePlayerSyncContainer.propTypes = {};
 
 export default FirebasePlayerSyncContainer;
