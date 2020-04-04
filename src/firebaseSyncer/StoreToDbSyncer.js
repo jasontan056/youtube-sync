@@ -12,7 +12,7 @@ const SEEK_THRESHOLD_SECONDS = 1;
  * to determine if the client made any changes that should be saved in
  * firebase.
  */
-export const StoreToDbSyncer = ({
+const StoreToDbSyncer = ({
   roomId,
   desiredPlaybackState,
   clientPlaybackState,

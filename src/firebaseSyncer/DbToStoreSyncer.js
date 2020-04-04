@@ -8,7 +8,7 @@ import Firebase from "../Firebase";
  * Listens to room state changes in the Firebase DB and updates the room state
  * in Redux.
  */
-export const DbToStoreSyncer = ({
+const DbToStoreSyncer = ({
   roomId,
   onVideoIdChange,
   onPlaybackStateChange,

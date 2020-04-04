@@ -11,7 +11,7 @@ const SEEK_THRESHOLD_SECONDS = 1;
 /**
  * Reconciles room state into a desired state.
  */
-export const RoomStateReconciler = ({
+const RoomStateReconciler = ({
   playbackState,
   seekPosition,
   videoId,
