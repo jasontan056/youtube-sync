@@ -1,10 +1,10 @@
 import React from "react";
-import DbChangerSyncer from "./DbChangerSyncer";
+import DbChangeSyncer from "./DbChangeSyncer";
 
 function FirebasePlayerSyncContainer(props) {
   return (
     <div>
-      <DbChangerSyncer />
+      <DbChangeSyncer />
     </div>
   );
 }

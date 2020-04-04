@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { roomActionCreators, PlaybackStates } from "../actions";
+import { roomActionCreators } from "../actions";
 import Firebase from "../Firebase";
 
-export const DbChangerSyncer = ({
+/**
+ * Listens to room state changes in the Firebase DB and updates the room state
+ * in Redux.
+ */
+export const DbChangeSyncer = ({
   roomId,
   onVideoIdChange,
   onPlaybackStateChange,
@@ -80,7 +84,7 @@ export const DbChangerSyncer = ({
   return <div>dbChangeSyncer</div>;
 };
 
-DbChangerSyncer.propTypes = {
+DbChangeSyncer.propTypes = {
   roomId: PropTypes.string.isRequired,
   onVideoIdChange: PropTypes.func.isRequired,
   onPlaybackStateChange: PropTypes.func.isRequired,
@@ -109,4 +113,4 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch(roomActionCreators.removeUserBuffering(userId)),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(DbChangerSyncer);
+export default connect(mapStateToProps, mapDispatchToProps)(DbChangeSyncer);
