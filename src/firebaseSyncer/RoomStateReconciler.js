@@ -5,9 +5,6 @@ import { desiredActionCreators } from "../actions";
 import { PlaybackStates } from "../actions";
 import Firebase from "../Firebase";
 
-// Only update desired seek position if it's off by more than this threshold.
-const SEEK_THRESHOLD_SECONDS = 1;
-
 /**
  * Reconciles room state into a desired state.
  */
@@ -20,7 +17,6 @@ const RoomStateReconciler = ({
   onPlaybackStateChange,
   onSeekChange,
 }) => {
-  const [desiredSeekPosition, setDesiredSeekPosition] = useState(-1);
   const [serverTimeOffset, setServerTimeOffset] = useState(null);
 
   // Subscribe to get estimated server time offset from firebase.
@@ -48,27 +44,25 @@ const RoomStateReconciler = ({
    * the video has been playing.
    */
   useEffect(() => {
+    if (serverTimeOffset === null) {
+      return;
+    }
+
     let newSeekPosition;
     if (playbackState === PlaybackStates.PLAYING) {
       const estimatedServerTimestamp = new Date().getTime() + serverTimeOffset;
-      newSeekPosition =
-        seekPosition + playStartTimestamp - estimatedServerTimestamp;
+      const elapsedTimeSec =
+        (playStartTimestamp - estimatedServerTimestamp) / 1000;
+      newSeekPosition = seekPosition + elapsedTimeSec;
     } else {
       newSeekPosition = seekPosition;
     }
-
-    if (
-      Math.abs(newSeekPosition - desiredSeekPosition) > SEEK_THRESHOLD_SECONDS
-    ) {
-      onSeekChange(newSeekPosition);
-      setDesiredSeekPosition(newSeekPosition);
-    }
+    onSeekChange(newSeekPosition);
   }, [
     seekPosition,
     playbackState,
     playStartTimestamp,
     serverTimeOffset,
-    desiredSeekPosition,
     onSeekChange,
   ]);
 

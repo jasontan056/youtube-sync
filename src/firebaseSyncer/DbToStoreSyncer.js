@@ -49,9 +49,6 @@ const DbToStoreSyncer = ({
     const playStartTimestampRef = roomRef.child("playStartTimestamp");
     playStartTimestampRef.on("value", (snapshot) => {
       const playStartTimestamp = snapshot.val();
-      if (!playStartTimestamp) {
-        return;
-      }
       onPlayStartTimestampChange(playStartTimestamp);
     });
 

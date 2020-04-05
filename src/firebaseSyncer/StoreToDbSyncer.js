@@ -5,7 +5,7 @@ import { PlaybackStates, ClientPlaybackStates } from "../actions";
 import Firebase from "../Firebase";
 
 // Only update room's seek position if it's off by more than this threshold.
-const SEEK_THRESHOLD_SECONDS = 1;
+const SEEK_THRESHOLD_SECONDS = 2;
 
 const usePrevious = (value = undefined) => {
   const ref = useRef();
@@ -41,6 +41,17 @@ const StoreToDbSyncer = ({
     setRoomRef(Firebase.database().ref(`room/${roomId}`));
   }, [roomId]);
 
+  // If no more users are buffering, update playback state in DB to be PLAYING.
+  useEffect(() => {
+    if (!roomRef) {
+      return;
+    }
+
+    if (Object.keys(usersBuffering).length === 0) {
+      roomRef.update({ playbackState: PlaybackStates.PLAYING });
+    }
+  }, [usersBuffering, roomRef]);
+
   // Update playback and buffering state in DB.
   useEffect(() => {
     if (!roomRef || clientPlaybackState === prevClientPlaybackState) {
@@ -52,7 +63,7 @@ const StoreToDbSyncer = ({
         if (desiredPlaybackState !== PlaybackStates.PLAYING) {
           roomRef.update({
             playbackState: PlaybackStates.PLAYING,
-            playStartTimestamp: Firebase.database.ServerValue,
+            playStartTimestamp: Firebase.database.ServerValue.TIMESTAMP,
           });
         }
         break;
@@ -78,12 +89,6 @@ const StoreToDbSyncer = ({
         if (userId) {
           roomRef.child(`/usersBuffering/${userId}`).remove();
         }
-        if (
-          userId in usersBuffering &&
-          Object.keys(usersBuffering).length === 1
-        ) {
-          roomRef.update({ playbackState: PlaybackStates.PLAYING });
-        }
         break;
       default:
         console.log("Client is in some other state!!!");
@@ -107,10 +112,10 @@ const StoreToDbSyncer = ({
       Math.abs(desiredSeekPosition - clientSeekPosition) >
       SEEK_THRESHOLD_SECONDS
     ) {
-      if (clientSeekPosition === ClientPlaybackStates.PLAYING) {
+      if (clientPlaybackState === ClientPlaybackStates.PLAYING) {
         roomRef.update({
           seekPosition: clientSeekPosition,
-          playStartTimestamp: Firebase.database.ServerValue,
+          playStartTimestamp: Firebase.database.ServerValue.TIMESTAMP,
         });
       } else {
         roomRef.update({
@@ -119,6 +124,7 @@ const StoreToDbSyncer = ({
       }
     }
   }, [
+    clientPlaybackState,
     clientSeekPosition,
     desiredSeekPosition,
     prevClientSeekPosition,

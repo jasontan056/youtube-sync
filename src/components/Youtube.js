@@ -4,7 +4,7 @@ import YouTube from "react-youtube";
 import { PlaybackStates, ClientPlaybackStates } from "../actions";
 
 // Only change player's seek position if it's off by more than this threshold.
-const SEEK_THRESHOLD_SECONDS = 1;
+const SEEK_THRESHOLD_SECONDS = 2;
 // Poll every INTERVAL to check if video position has changed due to a seek.
 const INTERVAL = 500;
 // Margin of acceptable error between expected and actual current video position.

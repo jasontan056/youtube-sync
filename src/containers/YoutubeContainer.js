@@ -11,15 +11,17 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  onPlaybackStateChange: (playbackState, playerCurrentTime) =>
+  onPlaybackStateChange: ({ playbackState, currentPlayerTime }) =>
     batch(() => {
       dispatch(clientActionCreators.setPlaybackState(playbackState));
+      // Only update the seek position in the store if the player has
+      // transitioned to a state where it isn't playing.
       if (
-        playbackState !== ClientPlaybackStates.PLAYING &&
-        playbackState !== ClientPlaybackStates.OTHER
+        playbackState === ClientPlaybackStates.PAUSED ||
+        playbackState === ClientPlaybackStates.BUFFERING ||
+        playbackState === ClientPlaybackStates.WAITING
       ) {
-        console.log(`playerCurrentTime: ${playerCurrentTime}`);
-        dispatch(clientActionCreators.seekTo(playerCurrentTime));
+        dispatch(clientActionCreators.seekTo(currentPlayerTime));
       }
     }),
   onSeek: (seekPosition) => dispatch(clientActionCreators.seekTo(seekPosition)),
