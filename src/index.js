@@ -5,12 +5,15 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import { createStore } from "redux";
 import reducers from "./reducers";
+import { setRoomId } from "./actions";
 
 const store = createStore(reducers);
 
 // !!! Temporary logging to observe changes in the store.
 console.log(store.getState());
 store.subscribe(() => console.log(store.getState()));
+
+store.dispatch(setRoomId("asdf"));
 
 ReactDOM.render(
   <React.StrictMode>

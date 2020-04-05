@@ -53,24 +53,53 @@ export default function Youtube({
   // React to when the youtube player's state changes.
   const onStateChange = useCallback(
     (event) => {
-      let newPlaybackState;
-      switch (event.data) {
+      if (!youtubeTarget) {
+        return;
+      }
+      switch (youtubeTarget.getPlayerState()) {
         case YouTube.PlayerState.PLAYING:
-          newPlaybackState = ClientPlaybackStates.PLAYING;
+          // If we're supposed to still be buffering, just pause the video and
+          // go into a WAITING state.
+          if (playbackState === PlaybackStates.BUFFERING) {
+            console.log("pausing video!!!");
+            youtubeTarget.pauseVideo();
+            onPlaybackStateChange(
+              ClientPlaybackStates.WAITING,
+              youtubeTarget.getCurrentTime()
+            );
+          } else {
+            onPlaybackStateChange(
+              ClientPlaybackStates.PLAYING,
+              youtubeTarget.getCurrentTime()
+            );
+          }
           break;
         case YouTube.PlayerState.PAUSED:
-          newPlaybackState = ClientPlaybackStates.PAUSED;
+          // Client's playback state is only considered paused if we didn't
+          // pause it programatically in a BUFFERING state.
+          if (playbackState !== PlaybackStates.BUFFERING) {
+            onPlaybackStateChange(
+              ClientPlaybackStates.PAUSED,
+              youtubeTarget.getCurrentTime()
+            );
+          }
           break;
         case YouTube.PlayerState.BUFFERING:
-          newPlaybackState = ClientPlaybackStates.BUFFERING;
+          onPlaybackStateChange(
+            ClientPlaybackStates.BUFFERING,
+            youtubeTarget.getCurrentTime()
+          );
           break;
         default:
-          newPlaybackState = ClientPlaybackStates.OTHER;
+          // If the client is in some weird state, just try to get it to play.
+          youtubeTarget.playVideo();
+          onPlaybackStateChange(
+            ClientPlaybackStates.OTHER,
+            youtubeTarget.getCurrentTime()
+          );
       }
-
-      onPlaybackStateChange(newPlaybackState);
     },
-    [onPlaybackStateChange]
+    [onPlaybackStateChange, playbackState, youtubeTarget]
   );
 
   // Control the youtube player based on the playbackState prop.
@@ -81,22 +110,43 @@ export default function Youtube({
 
     switch (playbackState) {
       case PlaybackStates.PLAYING:
-        youtubeTarget.playVideo();
+        if (youtubeTarget.getPlayerState() === YouTube.PlayerState.PLAYING) {
+          onPlaybackStateChange(
+            ClientPlaybackStates.PLAYING,
+            youtubeTarget.getCurrentTime()
+          );
+        } else {
+          youtubeTarget.playVideo();
+        }
         break;
       case PlaybackStates.PAUSED:
-        youtubeTarget.pauseVideo();
+        if (youtubeTarget.getPlayerState() === YouTube.PlayerState.PAUSED) {
+          onPlaybackStateChange(
+            ClientPlaybackStates.PAUSED,
+            youtubeTarget.getCurrentTime()
+          );
+        } else {
+          console.log("pausing video!!!");
+          youtubeTarget.pauseVideo();
+        }
         break;
       case PlaybackStates.BUFFERING:
         const currentState = youtubeTarget.getPlayerState();
         // If the player isn't actually buffering, pause the video.
-        if (currentState !== YouTube.PlayerState.BUFFERING) {
+        if (currentState === YouTube.PlayerState.BUFFERING) {
+          onPlaybackStateChange(
+            ClientPlaybackStates.BUFFERING,
+            youtubeTarget.getCurrentTime()
+          );
+        } else {
+          console.log("pausing video!!!");
           youtubeTarget.pauseVideo();
         }
         break;
       default:
         throw new Error("Unknown playback state as prop.");
     }
-  }, [playbackState, youtubeTarget]);
+  }, [playbackState, youtubeTarget, onPlaybackStateChange]);
 
   // Use timer to detect if user seeked to a different position.
   useEffect(() => {

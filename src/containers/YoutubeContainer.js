@@ -1,5 +1,5 @@
-import { connect } from "react-redux";
-import { clientActionCreators } from "../actions";
+import { connect, batch } from "react-redux";
+import { clientActionCreators, ClientPlaybackStates } from "../actions";
 import Youtube from "../components/Youtube";
 
 const mapStateToProps = (state, ownProps) => ({
@@ -11,8 +11,17 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  onPlaybackStateChange: (state) =>
-    dispatch(clientActionCreators.setPlaybackState(state)),
+  onPlaybackStateChange: (playbackState, playerCurrentTime) =>
+    batch(() => {
+      dispatch(clientActionCreators.setPlaybackState(playbackState));
+      if (
+        playbackState !== ClientPlaybackStates.PLAYING &&
+        playbackState !== ClientPlaybackStates.OTHER
+      ) {
+        console.log(`playerCurrentTime: ${playerCurrentTime}`);
+        dispatch(clientActionCreators.seekTo(playerCurrentTime));
+      }
+    }),
   onSeek: (seekPosition) => dispatch(clientActionCreators.seekTo(seekPosition)),
 });
 

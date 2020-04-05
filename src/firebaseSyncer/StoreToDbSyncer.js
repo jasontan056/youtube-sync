@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { PlaybackStates, ClientPlaybackStates } from "../actions";
@@ -6,6 +6,14 @@ import Firebase from "../Firebase";
 
 // Only update room's seek position if it's off by more than this threshold.
 const SEEK_THRESHOLD_SECONDS = 1;
+
+const usePrevious = (value = undefined) => {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};
 
 /**
  * Compares the actual client state with the desired state and room state
@@ -25,13 +33,17 @@ const StoreToDbSyncer = ({
   const [roomRef, setRoomRef] = useState(null);
   const [userId, setUserId] = useState(null);
 
+  const prevClientPlaybackState = usePrevious(clientPlaybackState);
+  const prevClientSeekPosition = usePrevious(clientSeekPosition);
+  const prevClientVideoId = usePrevious(clientVideoId);
+
   useEffect(() => {
     setRoomRef(Firebase.database().ref(`room/${roomId}`));
   }, [roomId]);
 
   // Update playback and buffering state in DB.
   useEffect(() => {
-    if (!roomRef) {
+    if (!roomRef || clientPlaybackState === prevClientPlaybackState) {
       return;
     }
 
@@ -66,7 +78,10 @@ const StoreToDbSyncer = ({
         if (userId) {
           roomRef.child(`/usersBuffering/${userId}`).remove();
         }
-        if (userId in usersBuffering && usersBuffering.length === 1) {
+        if (
+          userId in usersBuffering &&
+          Object.keys(usersBuffering).length === 1
+        ) {
           roomRef.update({ playbackState: PlaybackStates.PLAYING });
         }
         break;
@@ -79,11 +94,12 @@ const StoreToDbSyncer = ({
     clientPlaybackState,
     usersBuffering,
     userId,
+    prevClientPlaybackState,
   ]);
 
   // Update seek position in DB.
   useEffect(() => {
-    if (!roomRef) {
+    if (!roomRef || clientSeekPosition === prevClientSeekPosition) {
       return;
     }
 
@@ -102,20 +118,25 @@ const StoreToDbSyncer = ({
         });
       }
     }
-  }, [clientSeekPosition, desiredSeekPosition, roomRef]);
+  }, [
+    clientSeekPosition,
+    desiredSeekPosition,
+    prevClientSeekPosition,
+    roomRef,
+  ]);
 
   // Update video ID in DB.
   useEffect(() => {
-    if (!roomRef) {
+    if (!roomRef || clientVideoId === prevClientVideoId) {
       return;
     }
 
-    if (desiredVideoId !== clientVideoId) {
+    if (clientVideoId && clientVideoId !== desiredVideoId) {
       roomRef.update({
         videoId: clientVideoId,
       });
     }
-  }, [desiredVideoId, clientVideoId, roomRef]);
+  }, [desiredVideoId, clientVideoId, roomRef, prevClientVideoId]);
 
   return <div>Store to db syncer</div>;
 };
@@ -142,4 +163,4 @@ const mapStateToProps = (state) => ({
   clientVideoId: state.client.videoId,
 });
 
-export default connect(mapStateToProps, {})(StoreToDbSyncer);
+export default connect(mapStateToProps, null)(StoreToDbSyncer);
