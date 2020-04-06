@@ -151,8 +151,8 @@ StoreToDbSyncer.propTypes = {
   clientVideoId: PropTypes.string,
 };
 
-const mapStateToProps = (state) => ({
-  roomId: state.roomId,
+const mapStateToProps = (state, ownProps) => ({
+  roomId: ownProps.roomId,
   desiredPlaybackState: state.desired.playbackState,
   clientPlaybackState: state.client.playbackState,
   usersBuffering: state.room.usersBuffering,

@@ -91,8 +91,8 @@ DbToStoreSyncer.propTypes = {
   onUserBufferingRemoved: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  roomId: state.roomId,
+const mapStateToProps = (state, ownProps) => ({
+  roomId: ownProps.roomId,
 });
 
 const mapDispatchToProps = (dispatch) => ({

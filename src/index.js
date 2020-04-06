@@ -13,8 +13,6 @@ const store = createStore(reducers);
 console.log(store.getState());
 store.subscribe(() => console.log(store.getState()));
 
-store.dispatch(setRoomId("asdf"));
-
 ReactDOM.render(
   <React.StrictMode>
     <App store={store} />

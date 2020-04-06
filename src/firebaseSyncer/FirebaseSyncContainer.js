@@ -1,16 +1,19 @@
 import React from "react";
+import PropTypes from "prop-types";
 import DbToStoreSyncer from "./DbToStoreSyncer";
 import RoomStateReconciler from "./RoomStateReconciler";
 import StoreToDbSyncer from "./StoreToDbSyncer";
 
-function FirebasePlayerSyncContainer() {
+export default function FirebasePlayerSyncContainer({ roomId }) {
   return (
     <div>
-      <DbToStoreSyncer />
+      <DbToStoreSyncer roomId={roomId} />
       <RoomStateReconciler />
-      <StoreToDbSyncer />
+      <StoreToDbSyncer roomId={roomId} />
     </div>
   );
 }
 
-export default FirebasePlayerSyncContainer;
+FirebasePlayerSyncContainer.propTypes = {
+  roomId: PropTypes.string.isRequired,
+};
