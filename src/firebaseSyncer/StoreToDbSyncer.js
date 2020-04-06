@@ -1,19 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { PlaybackStates, ClientPlaybackStates } from "../actions";
 import Firebase from "../Firebase";
+import { usePrevious } from "../utilities/hooks";
 
 // Only update room's seek position if it's off by more than this threshold.
 const SEEK_THRESHOLD_SECONDS = 2;
-
-const usePrevious = (value = undefined) => {
-  const ref = useRef();
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-};
 
 /**
  * Compares the actual client state with the desired state and room state
