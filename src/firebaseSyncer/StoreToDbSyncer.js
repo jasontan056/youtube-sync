@@ -34,17 +34,6 @@ const StoreToDbSyncer = ({
     setRoomRef(Firebase.database().ref(`room/${roomId}`));
   }, [roomId]);
 
-  // If no more users are buffering, update playback state in DB to be PLAYING.
-  useEffect(() => {
-    if (!roomRef) {
-      return;
-    }
-
-    if (Object.keys(usersBuffering).length === 0) {
-      roomRef.update({ playbackState: PlaybackStates.PLAYING });
-    }
-  }, [usersBuffering, roomRef]);
-
   // Update playback and buffering state in DB.
   useEffect(() => {
     if (!roomRef || clientPlaybackState === prevClientPlaybackState) {
