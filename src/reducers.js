@@ -31,6 +31,11 @@ const client = combineReducers({
     (state, { payload: { videoId } }) => videoId,
     null
   ),
+  playerLoading: handleAction(
+    clientActionCreators.setPlayerLoading,
+    (state, { payload: { playerLoading } }) => playerLoading,
+    true
+  ),
 });
 
 const desired = combineReducers({
