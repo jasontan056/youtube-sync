@@ -29,41 +29,51 @@ const RoomStateReconciler = ({
     };
   }, []);
 
-  if (serverTimeOffset === null) {
-    return null;
-  }
-
-  let desiredPlaybackState;
-  if (isBuffering) {
-    desiredPlaybackState = PlaybackStates.BUFFERING;
-  } else {
-    if (playbackState === RoomPlaybackStates.PLAYING) {
-      desiredPlaybackState = PlaybackStates.PLAYING;
-    } else {
-      desiredPlaybackState = PlaybackStates.PAUSED;
+  useEffect(() => {
+    if (serverTimeOffset === null) {
+      return;
     }
-  }
 
-  /**
-   * Calculate the current seek position. Seek positions are not updated while
-   * playing, so we must estimate the seek position based on the amount of time
-   * the video has been playing.
-   */
-  let desiredSeekPosition;
-  if (playbackState === PlaybackStates.PLAYING) {
-    const estimatedServerTimestamp = new Date().getTime() + serverTimeOffset;
-    const elapsedTimeSec =
-      (playStartTimestamp - estimatedServerTimestamp) / 1000;
-    desiredSeekPosition = seekPosition + elapsedTimeSec;
-  } else {
-    desiredSeekPosition = seekPosition;
-  }
+    let desiredPlaybackState;
+    if (isBuffering) {
+      desiredPlaybackState = PlaybackStates.BUFFERING;
+    } else {
+      if (playbackState === RoomPlaybackStates.PLAYING) {
+        desiredPlaybackState = PlaybackStates.PLAYING;
+      } else {
+        desiredPlaybackState = PlaybackStates.PAUSED;
+      }
+    }
 
-  onDesiredStateChange({
-    playbackState: desiredPlaybackState,
-    seekPosition: desiredSeekPosition,
+    /**
+     * Calculate the current seek position. Seek positions are not updated while
+     * playing, so we must estimate the seek position based on the amount of time
+     * the video has been playing.
+     */
+    let desiredSeekPosition;
+    if (playbackState === PlaybackStates.PLAYING) {
+      const estimatedServerTimestamp = new Date().getTime() + serverTimeOffset;
+      const elapsedTimeSec =
+        (playStartTimestamp - estimatedServerTimestamp) / 1000;
+      desiredSeekPosition = seekPosition + elapsedTimeSec;
+    } else {
+      desiredSeekPosition = seekPosition;
+    }
+
+    onDesiredStateChange({
+      playbackState: desiredPlaybackState,
+      seekPosition: desiredSeekPosition,
+      videoId,
+    });
+  }, [
+    isBuffering,
+    onDesiredStateChange,
+    playStartTimestamp,
+    playbackState,
+    seekPosition,
+    serverTimeOffset,
     videoId,
-  });
+  ]);
 
   return <div>Room state reconciler</div>;
 };
