@@ -25,6 +25,8 @@ const mapDispatchToProps = (dispatch) => ({
       }
     }),
   onSeek: (seekPosition) => dispatch(clientActionCreators.seekTo(seekPosition)),
+  onPlayerLoadingChange: (playerLoading) =>
+    dispatch(clientActionCreators.setPlayerLoading(playerLoading)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Youtube);

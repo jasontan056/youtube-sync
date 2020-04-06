@@ -15,6 +15,7 @@ const SEEK_THRESHOLD_SECONDS = 2;
  */
 const StoreToDbSyncer = ({
   roomId,
+  clientPlayerLoading,
   desiredPlaybackState,
   clientPlaybackState,
   usersBuffering,
@@ -36,7 +37,11 @@ const StoreToDbSyncer = ({
 
   // Update playback and buffering state in DB.
   useEffect(() => {
-    if (!roomRef || clientPlaybackState === prevClientPlaybackState) {
+    if (
+      !roomRef ||
+      clientPlayerLoading ||
+      clientPlaybackState === prevClientPlaybackState
+    ) {
       return;
     }
 
@@ -82,11 +87,16 @@ const StoreToDbSyncer = ({
     usersBuffering,
     userId,
     prevClientPlaybackState,
+    clientPlayerLoading,
   ]);
 
   // Update seek position in DB.
   useEffect(() => {
-    if (!roomRef || clientSeekPosition === prevClientSeekPosition) {
+    if (
+      !roomRef ||
+      clientPlayerLoading ||
+      clientSeekPosition === prevClientSeekPosition
+    ) {
       return;
     }
 
@@ -107,6 +117,7 @@ const StoreToDbSyncer = ({
     }
   }, [
     clientPlaybackState,
+    clientPlayerLoading,
     clientSeekPosition,
     desiredSeekPosition,
     prevClientSeekPosition,
@@ -115,7 +126,11 @@ const StoreToDbSyncer = ({
 
   // Update video ID in DB.
   useEffect(() => {
-    if (!roomRef || clientVideoId === prevClientVideoId) {
+    if (
+      !roomRef ||
+      clientPlayerLoading ||
+      clientVideoId === prevClientVideoId
+    ) {
       return;
     }
 
@@ -124,13 +139,20 @@ const StoreToDbSyncer = ({
         videoId: clientVideoId,
       });
     }
-  }, [desiredVideoId, clientVideoId, roomRef, prevClientVideoId]);
+  }, [
+    desiredVideoId,
+    clientVideoId,
+    roomRef,
+    prevClientVideoId,
+    clientPlayerLoading,
+  ]);
 
   return <div>Store to db syncer</div>;
 };
 
 StoreToDbSyncer.propTypes = {
   roomId: PropTypes.string,
+  clientPlayerLoading: PropTypes.bool,
   desiredPlaybackState: PropTypes.oneOf(Object.values(PlaybackStates)),
   clientPlaybackState: PropTypes.oneOf(Object.values(ClientPlaybackStates)),
   usersBuffering: PropTypes.object,
@@ -142,6 +164,7 @@ StoreToDbSyncer.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   roomId: ownProps.roomId,
+  clientPlayerLoading: state.client.playerLoading,
   desiredPlaybackState: state.desired.playbackState,
   clientPlaybackState: state.client.playbackState,
   usersBuffering: state.room.usersBuffering,
