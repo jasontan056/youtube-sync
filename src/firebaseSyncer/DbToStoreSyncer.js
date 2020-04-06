@@ -1,94 +1,58 @@
 import React, { useEffect } from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
-import { roomActionCreators } from "../actions";
+import { connect, batch } from "react-redux";
+import { roomActionCreators, RoomPlaybackStates } from "../actions";
 import Firebase from "../Firebase";
 
 /**
  * Listens to room state changes in the Firebase DB and updates the room state
  * in Redux.
  */
-const DbToStoreSyncer = ({
-  roomId,
-  onVideoIdChange,
-  onPlaybackStateChange,
-  onSeekChange,
-  onPlayStartTimestampChange,
-  onUserBufferingAdded,
-  onUserBufferingRemoved,
-}) => {
+const DbToStoreSyncer = ({ roomId, onRoomStateChange }) => {
   useEffect(() => {
     const roomRef = Firebase.database().ref(`room/${roomId}`);
-    const videoIdRef = roomRef.child("videoId");
-    videoIdRef.on("value", (snapshot) => {
-      const videoId = snapshot.val();
-      if (!videoId) {
+    let prevUsersBuffering = new Set();
+    roomRef.on("value", (snapshot) => {
+      if (!snapshot.exists()) {
         return;
       }
-      onVideoIdChange(videoId);
-    });
-
-    const playbackStateRef = roomRef.child("playbackState");
-    playbackStateRef.on("value", (snapshot) => {
-      const playbackState = snapshot.val();
-      if (!playbackState) {
-        return;
+      const room = snapshot.val();
+      let newUsersBuffering = [];
+      let removedUsersBuffering = [];
+      if (room.usersBuffering) {
+        const usersBuffering = new Set(Object.keys(room.usersBuffering));
+        newUsersBuffering = [...usersBuffering].filter(
+          (userId) => !prevUsersBuffering.has(userId)
+        );
+        removedUsersBuffering = [...prevUsersBuffering].filter(
+          (userId) => !usersBuffering.has(userId)
+        );
+        prevUsersBuffering = usersBuffering;
+      } else {
+        removedUsersBuffering = [...prevUsersBuffering];
+        prevUsersBuffering = new Set();
       }
-      onPlaybackStateChange(playbackState);
-    });
 
-    const seekPositionRef = roomRef.child("seekPosition");
-    seekPositionRef.on("value", (snapshot) => {
-      const seekPosition = snapshot.val();
-      if (!seekPosition) {
-        return;
-      }
-      onSeekChange(seekPosition);
+      onRoomStateChange({
+        playbackState: room.playbackState,
+        seekPosition: room.seekPosition,
+        videoId: room.videoId,
+        playStartTimestamp: room.playStartTimestamp,
+        newUsersBuffering,
+        removedUsersBuffering,
+      });
     });
-
-    const playStartTimestampRef = roomRef.child("playStartTimestamp");
-    playStartTimestampRef.on("value", (snapshot) => {
-      const playStartTimestamp = snapshot.val();
-      onPlayStartTimestampChange(playStartTimestamp);
-    });
-
-    const usersBufferingRef = roomRef.child("usersBuffering");
-    usersBufferingRef.on("child_added", (data) => {
-      const userId = data.key;
-      onUserBufferingAdded(userId);
-    });
-    usersBufferingRef.on("child_removed", (data) => {
-      const userId = data.key;
-      onUserBufferingRemoved(userId);
-    });
-
-    return function cleanup() {
-      videoIdRef.off();
-      playbackStateRef.off();
-      seekPositionRef.off();
-      playStartTimestampRef.off();
-      usersBufferingRef.off();
+    return () => {
+      roomRef.off();
     };
-  }, [
-    onPlayStartTimestampChange,
-    onPlaybackStateChange,
-    onSeekChange,
-    onUserBufferingAdded,
-    onUserBufferingRemoved,
-    onVideoIdChange,
-    roomId,
-  ]);
+  }, [onRoomStateChange, roomId]);
+
   return <div>DbToStoreSyncer</div>;
 };
 
 DbToStoreSyncer.propTypes = {
   roomId: PropTypes.string.isRequired,
-  onVideoIdChange: PropTypes.func.isRequired,
-  onPlaybackStateChange: PropTypes.func.isRequired,
-  onSeekChange: PropTypes.func.isRequired,
-  onPlayStartTimestampChange: PropTypes.func.isRequired,
-  onUserBufferingAdded: PropTypes.func.isRequired,
-  onUserBufferingRemoved: PropTypes.func.isRequired,
+  onRoomStateChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -96,18 +60,26 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  onVideoIdChange: (videoId) =>
-    dispatch(roomActionCreators.setVideoId(videoId)),
-  onPlaybackStateChange: (state) =>
-    dispatch(roomActionCreators.setPlaybackState(state)),
-  onSeekChange: (seekPosition) =>
-    dispatch(roomActionCreators.seekTo(seekPosition)),
-  onPlayStartTimestampChange: (playStartTimestamp) =>
-    dispatch(roomActionCreators.setPlayStartTimestamp(playStartTimestamp)),
-  onUserBufferingAdded: (userId) =>
-    dispatch(roomActionCreators.addUserBuffering(userId)),
-  onUserBufferingRemoved: (userId) =>
-    dispatch(roomActionCreators.removeUserBuffering(userId)),
+  onRoomStateChange: ({
+    playbackState = RoomPlaybackStates.PAUSED,
+    seekPosition = 0,
+    videoId = null,
+    playStartTimestamp = null,
+    newUsersBuffering = [],
+    removedUsersBuffering = [],
+  }) =>
+    batch(() => {
+      dispatch(roomActionCreators.setPlaybackState(playbackState));
+      dispatch(roomActionCreators.seekTo(seekPosition));
+      dispatch(roomActionCreators.setVideoId(videoId));
+      dispatch(roomActionCreators.setPlayStartTimestamp(playStartTimestamp));
+      for (let userId of newUsersBuffering) {
+        dispatch(roomActionCreators.addUserBuffering(userId));
+      }
+      for (let userId of removedUsersBuffering) {
+        dispatch(roomActionCreators.removeUserBuffering(userId));
+      }
+    }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DbToStoreSyncer);

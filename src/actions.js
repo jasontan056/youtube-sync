@@ -11,6 +11,11 @@ export const ClientPlaybackStates = {
   OTHER: "OTHER",
 };
 
+export const RoomPlaybackStates = {
+  PLAYING: "PLAYING",
+  PAUSED: "PAUSED",
+};
+
 export const PlaybackStates = {
   PLAYING: "PLAYING",
   PAUSED: "PAUSED",
