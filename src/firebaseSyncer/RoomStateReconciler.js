@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
-import { desiredActionCreators } from "../actions";
+import { connect, batch } from "react-redux";
+import { desiredActionCreators, RoomPlaybackStates } from "../actions";
 import { PlaybackStates } from "../actions";
 import Firebase from "../Firebase";
 
@@ -10,12 +10,11 @@ import Firebase from "../Firebase";
  */
 const RoomStateReconciler = ({
   playbackState,
+  isBuffering,
   seekPosition,
   videoId,
   playStartTimestamp,
-  onVideoIdChange,
-  onPlaybackStateChange,
-  onSeekChange,
+  onDesiredStateChange,
 }) => {
   const [serverTimeOffset, setServerTimeOffset] = useState(null);
 
@@ -30,53 +29,51 @@ const RoomStateReconciler = ({
     };
   }, []);
 
-  useEffect(() => {
-    onPlaybackStateChange(playbackState);
-  }, [onPlaybackStateChange, playbackState]);
+  if (serverTimeOffset === null) {
+    return null;
+  }
 
-  useEffect(() => {
-    onVideoIdChange(videoId);
-  }, [onVideoIdChange, videoId]);
+  let desiredPlaybackState;
+  if (isBuffering) {
+    desiredPlaybackState = PlaybackStates.BUFFERING;
+  } else {
+    if (playbackState === RoomPlaybackStates.PLAYING) {
+      desiredPlaybackState = PlaybackStates.PLAYING;
+    } else {
+      desiredPlaybackState = PlaybackStates.PAUSED;
+    }
+  }
 
   /**
    * Calculate the current seek position. Seek positions are not updated while
    * playing, so we must estimate the seek position based on the amount of time
    * the video has been playing.
    */
-  useEffect(() => {
-    if (serverTimeOffset === null) {
-      return;
-    }
+  let desiredSeekPosition;
+  if (playbackState === PlaybackStates.PLAYING) {
+    const estimatedServerTimestamp = new Date().getTime() + serverTimeOffset;
+    const elapsedTimeSec =
+      (playStartTimestamp - estimatedServerTimestamp) / 1000;
+    desiredSeekPosition = seekPosition + elapsedTimeSec;
+  } else {
+    desiredSeekPosition = seekPosition;
+  }
 
-    let newSeekPosition;
-    if (playbackState === PlaybackStates.PLAYING) {
-      const estimatedServerTimestamp = new Date().getTime() + serverTimeOffset;
-      const elapsedTimeSec =
-        (playStartTimestamp - estimatedServerTimestamp) / 1000;
-      newSeekPosition = seekPosition + elapsedTimeSec;
-    } else {
-      newSeekPosition = seekPosition;
-    }
-    onSeekChange(newSeekPosition);
-  }, [
-    seekPosition,
-    playbackState,
-    playStartTimestamp,
-    serverTimeOffset,
-    onSeekChange,
-  ]);
+  onDesiredStateChange({
+    playbackState: desiredPlaybackState,
+    seekPosition: desiredSeekPosition,
+    videoId,
+  });
 
   return <div>Room state reconciler</div>;
 };
 
 RoomStateReconciler.propTypes = {
-  playbackState: PropTypes.oneOf(Object.values(PlaybackStates)).isRequired,
-  seekPosition: PropTypes.number.isRequired,
-  videoId: PropTypes.string.isRequired,
-  playStartTimestamp: PropTypes.number.isRequired,
-  onVideoIdChange: PropTypes.func.isRequired,
-  onPlaybackStateChange: PropTypes.func.isRequired,
-  onSeekChange: PropTypes.func.isRequired,
+  playbackState: PropTypes.oneOf(Object.values(RoomPlaybackStates)).isRequired,
+  seekPosition: PropTypes.number,
+  videoId: PropTypes.string,
+  playStartTimestamp: PropTypes.number,
+  onDesiredStateChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -84,15 +81,16 @@ const mapStateToProps = (state) => ({
   seekPosition: state.room.seekPosition,
   videoId: state.room.videoId,
   playStartTimestamp: state.room.playStartTimestamp,
+  isBuffering: Object.keys(state.room.usersBuffering).length > 0,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  onVideoIdChange: (videoId) =>
-    dispatch(desiredActionCreators.setVideoId(videoId)),
-  onPlaybackStateChange: (state) =>
-    dispatch(desiredActionCreators.setPlaybackState(state)),
-  onSeekChange: (seekPosition) =>
-    dispatch(desiredActionCreators.seekTo(seekPosition)),
+  onDesiredStateChange: ({ playbackState, seekPosition, videoId }) =>
+    batch(() => {
+      dispatch(desiredActionCreators.setPlaybackState(playbackState));
+      dispatch(desiredActionCreators.seekTo(seekPosition));
+      dispatch(desiredActionCreators.setVideoId(videoId));
+    }),
 });
 
 export default connect(
