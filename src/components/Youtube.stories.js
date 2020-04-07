@@ -9,12 +9,13 @@ export default {
   title: "Youtube",
   decorators: [withKnobs],
   // Our exports that end in "Data" are not stories.
-  excludeStories: /.*Data$/
+  excludeStories: /.*Data$/,
 };
 
 export const actionsData = {
   onPlaybackStateChange: action("onPlaybackStateChange"),
-  onSeek: action("onSeek")
+  onSeek: action("onSeek"),
+  onPlayerLoadingChange: action("onPlayerLoadingChange"),
 };
 
 export const Default = () => <Youtube {...actionsData} />;
