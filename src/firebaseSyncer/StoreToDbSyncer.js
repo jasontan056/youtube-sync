@@ -6,7 +6,7 @@ import Firebase from "../Firebase";
 import { usePrevious } from "../utilities/hooks";
 
 // Only update room's seek position if it's off by more than this threshold.
-const SEEK_THRESHOLD_SECONDS = 2;
+const SEEK_THRESHOLD_SECONDS = 1.5;
 
 /**
  * Compares the actual client state with the desired state and room state
@@ -15,10 +15,8 @@ const SEEK_THRESHOLD_SECONDS = 2;
  */
 const StoreToDbSyncer = ({
   roomId,
-  clientPlayerLoading,
   desiredPlaybackState,
   clientPlaybackState,
-  usersBuffering,
   desiredSeekPosition,
   clientSeekPosition,
   desiredVideoId,
@@ -37,11 +35,7 @@ const StoreToDbSyncer = ({
 
   // Update playback and buffering state in DB.
   useEffect(() => {
-    if (
-      !roomRef ||
-      clientPlayerLoading ||
-      clientPlaybackState === prevClientPlaybackState
-    ) {
+    if (!roomRef || clientPlaybackState === prevClientPlaybackState) {
       return;
     }
 
@@ -66,35 +60,27 @@ const StoreToDbSyncer = ({
           setUserId(userBufferRef.key);
           userBufferRef.set(true);
         }
-        if (desiredPlaybackState !== PlaybackStates.BUFFERING) {
-          roomRef.update({ playbackState: PlaybackStates.BUFFERING });
-        }
         break;
       case ClientPlaybackStates.WAITING:
         if (userId) {
           roomRef.child(`/usersBuffering/${userId}`).remove();
+          setUserId(null);
         }
         break;
       default:
         console.log("Client is in some other state!!!");
     }
   }, [
-    roomRef,
-    desiredPlaybackState,
     clientPlaybackState,
-    usersBuffering,
-    userId,
+    desiredPlaybackState,
     prevClientPlaybackState,
-    clientPlayerLoading,
+    roomRef,
+    userId,
   ]);
 
   // Update seek position in DB.
   useEffect(() => {
-    if (
-      !roomRef ||
-      clientPlayerLoading ||
-      clientSeekPosition === prevClientSeekPosition
-    ) {
+    if (!roomRef || clientSeekPosition === prevClientSeekPosition) {
       return;
     }
 
@@ -115,7 +101,6 @@ const StoreToDbSyncer = ({
     }
   }, [
     clientPlaybackState,
-    clientPlayerLoading,
     clientSeekPosition,
     desiredSeekPosition,
     prevClientSeekPosition,
@@ -124,11 +109,7 @@ const StoreToDbSyncer = ({
 
   // Update video ID in DB.
   useEffect(() => {
-    if (
-      !roomRef ||
-      clientPlayerLoading ||
-      clientVideoId === prevClientVideoId
-    ) {
+    if (!roomRef || clientVideoId === prevClientVideoId) {
       return;
     }
 
@@ -137,20 +118,13 @@ const StoreToDbSyncer = ({
         videoId: clientVideoId,
       });
     }
-  }, [
-    desiredVideoId,
-    clientVideoId,
-    roomRef,
-    prevClientVideoId,
-    clientPlayerLoading,
-  ]);
+  }, [desiredVideoId, clientVideoId, roomRef, prevClientVideoId]);
 
   return <div>Store to db syncer</div>;
 };
 
 StoreToDbSyncer.propTypes = {
   roomId: PropTypes.string,
-  clientPlayerLoading: PropTypes.bool,
   desiredPlaybackState: PropTypes.oneOf(Object.values(PlaybackStates)),
   clientPlaybackState: PropTypes.oneOf(Object.values(ClientPlaybackStates)),
   usersBuffering: PropTypes.object,
@@ -162,7 +136,6 @@ StoreToDbSyncer.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   roomId: ownProps.roomId,
-  clientPlayerLoading: state.client.playerLoading,
   desiredPlaybackState: state.desired.playbackState,
   clientPlaybackState: state.client.playbackState,
   usersBuffering: state.room.usersBuffering,

@@ -36,7 +36,6 @@ export const {
     SET_PLAYBACK_STATE: (playbackState) => ({ playbackState }),
     SEEK_TO: (seekPosition) => ({ seekPosition }),
     SET_VIDEO_ID: (videoId) => ({ videoId }),
-    SET_PLAYER_LOADING: (playerLoading) => ({ playerLoading }),
   },
   DESIRED: {
     SET_PLAYBACK_STATE: (playbackState) => ({ playbackState }),

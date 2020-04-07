@@ -1,5 +1,5 @@
 import { connect, batch } from "react-redux";
-import { clientActionCreators, ClientPlaybackStates } from "../actions";
+import { clientActionCreators } from "../actions";
 import Youtube from "../components/Youtube";
 
 const mapStateToProps = (state, ownProps) => ({
@@ -14,19 +14,9 @@ const mapDispatchToProps = (dispatch) => ({
   onPlaybackStateChange: ({ playbackState, currentPlayerTime }) =>
     batch(() => {
       dispatch(clientActionCreators.setPlaybackState(playbackState));
-      // Only update the seek position in the store if the player has
-      // transitioned to a state where it isn't playing.
-      if (
-        playbackState === ClientPlaybackStates.PAUSED ||
-        playbackState === ClientPlaybackStates.BUFFERING ||
-        playbackState === ClientPlaybackStates.WAITING
-      ) {
-        dispatch(clientActionCreators.seekTo(currentPlayerTime));
-      }
+      dispatch(clientActionCreators.seekTo(currentPlayerTime));
     }),
   onSeek: (seekPosition) => dispatch(clientActionCreators.seekTo(seekPosition)),
-  onPlayerLoadingChange: (playerLoading) =>
-    dispatch(clientActionCreators.setPlayerLoading(playerLoading)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Youtube);
