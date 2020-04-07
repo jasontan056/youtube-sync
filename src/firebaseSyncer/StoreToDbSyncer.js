@@ -60,9 +60,7 @@ const StoreToDbSyncer = ({
         }
         break;
       case ClientPlaybackStates.BUFFERING:
-        if (userId && userId in usersBuffering) {
-          // no-op
-        } else {
+        if (!userId) {
           const userBufferRef = roomRef.child("usersBuffering").push();
           userBufferRef.onDisconnect().remove();
           setUserId(userBufferRef.key);
