@@ -47,7 +47,7 @@ const DbToStoreSyncer = ({ roomId, onRoomStateChange }) => {
     };
   }, [onRoomStateChange, roomId]);
 
-  return <div>DbToStoreSyncer</div>;
+  return null;
 };
 
 DbToStoreSyncer.propTypes = {

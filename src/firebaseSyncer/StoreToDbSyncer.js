@@ -124,7 +124,7 @@ const StoreToDbSyncer = ({
     }
   }, [desiredVideoId, clientVideoId, roomRef, prevClientVideoId]);
 
-  return <div>Store to db syncer</div>;
+  return null;
 };
 
 StoreToDbSyncer.propTypes = {

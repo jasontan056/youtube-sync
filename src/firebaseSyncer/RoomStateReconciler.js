@@ -75,7 +75,7 @@ const RoomStateReconciler = ({
     videoId,
   ]);
 
-  return <div>Room state reconciler</div>;
+  return null;
 };
 
 RoomStateReconciler.propTypes = {
