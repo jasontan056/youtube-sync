@@ -75,7 +75,8 @@ const StoreToDbSyncer = ({
         }
         break;
       default:
-        throw new Error("Client in abnormal state.");
+        console.log("Client is in OTHER state");
+        Object.assign(updates, { playbackState: PlaybackStates.PAUSED });
     }
 
     if (clientSeekPosition !== prevClientSeekPosition) {
