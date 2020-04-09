@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { PlaybackStates, ClientPlaybackStates } from "../actions";
@@ -15,7 +15,6 @@ const SEEK_THRESHOLD_SECONDS = 1.5;
  */
 const StoreToDbSyncer = ({
   roomId,
-  desiredPlaybackState,
   clientPlaybackState,
   desiredSeekPosition,
   clientSeekPosition,
@@ -25,7 +24,6 @@ const StoreToDbSyncer = ({
   const [roomRef, setRoomRef] = useState(null);
   const [userId, setUserId] = useState(null);
 
-  const prevClientPlaybackState = usePrevious(clientPlaybackState);
   const prevClientSeekPosition = usePrevious(clientSeekPosition);
   const prevClientVideoId = usePrevious(clientVideoId);
 
@@ -33,71 +31,71 @@ const StoreToDbSyncer = ({
     setRoomRef(Firebase.database().ref(`room/${roomId}`));
   }, [roomId]);
 
-  // Update playback and buffering state in DB.
-  useEffect(() => {
-    if (!roomRef || clientPlaybackState === prevClientPlaybackState) {
+  const updateState = useCallback(() => {
+    if (
+      !roomRef ||
+      clientPlaybackState === null ||
+      clientSeekPosition === null
+    ) {
       return;
     }
 
+    const updates = {};
+
     switch (clientPlaybackState) {
       case ClientPlaybackStates.PLAYING:
-        if (desiredPlaybackState !== PlaybackStates.PLAYING) {
-          roomRef.update({
-            playbackState: PlaybackStates.PLAYING,
-            playStartTimestamp: Firebase.database.ServerValue.TIMESTAMP,
-          });
-        }
+        Object.assign(updates, {
+          playbackState: PlaybackStates.PLAYING,
+          playStartTimestamp: Firebase.database.ServerValue.TIMESTAMP,
+        });
         break;
       case ClientPlaybackStates.PAUSED:
-        if (desiredPlaybackState !== PlaybackStates.PAUSED) {
-          roomRef.update({ playbackState: PlaybackStates.PAUSED });
-        }
+        Object.assign(updates, { playbackState: PlaybackStates.PAUSED });
         break;
       case ClientPlaybackStates.BUFFERING:
         if (!userId) {
           const userBufferRef = roomRef.child("usersBuffering").push();
           userBufferRef.onDisconnect().remove();
+          Object.assign(updates, {
+            usersBuffering: {
+              [userBufferRef.key]: true,
+            },
+          });
           setUserId(userBufferRef.key);
-          userBufferRef.set(true);
         }
         break;
       case ClientPlaybackStates.WAITING:
         if (userId) {
-          roomRef.child(`/usersBuffering/${userId}`).remove();
+          Object.assign(updates, {
+            usersBuffering: {
+              [userId]: null,
+            },
+          });
           setUserId(null);
         }
         break;
       default:
-        console.log("Client is in some other state!!!");
-    }
-  }, [
-    clientPlaybackState,
-    desiredPlaybackState,
-    prevClientPlaybackState,
-    roomRef,
-    userId,
-  ]);
-
-  // Update seek position in DB.
-  useEffect(() => {
-    if (!roomRef || clientSeekPosition === prevClientSeekPosition) {
-      return;
+        throw new Error("Client in abnormal state.");
     }
 
-    if (
-      Math.abs(desiredSeekPosition - clientSeekPosition) >
-      SEEK_THRESHOLD_SECONDS
-    ) {
-      if (clientPlaybackState === ClientPlaybackStates.PLAYING) {
-        roomRef.update({
-          seekPosition: clientSeekPosition,
-          playStartTimestamp: Firebase.database.ServerValue.TIMESTAMP,
-        });
-      } else {
-        roomRef.update({
+    if (clientSeekPosition !== prevClientSeekPosition) {
+      if (
+        Math.abs(desiredSeekPosition - clientSeekPosition) >
+        SEEK_THRESHOLD_SECONDS
+      ) {
+        Object.assign(updates, {
           seekPosition: clientSeekPosition,
         });
+        if (clientPlaybackState === ClientPlaybackStates.PLAYING) {
+          Object.assign(updates, {
+            playStartTimestamp: Firebase.database.ServerValue.TIMESTAMP,
+          });
+        }
       }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      roomRef.update(updates);
     }
   }, [
     clientPlaybackState,
@@ -105,7 +103,10 @@ const StoreToDbSyncer = ({
     desiredSeekPosition,
     prevClientSeekPosition,
     roomRef,
+    userId,
   ]);
+
+  useEffect(updateState, [roomRef, clientPlaybackState, clientSeekPosition]);
 
   // Update video ID in DB.
   useEffect(() => {
@@ -116,6 +117,9 @@ const StoreToDbSyncer = ({
     if (clientVideoId && clientVideoId !== desiredVideoId) {
       roomRef.update({
         videoId: clientVideoId,
+        playbackState: PlaybackStates.PAUSED,
+        seekPosition: 0,
+        playStartTimestamp: null,
       });
     }
   }, [desiredVideoId, clientVideoId, roomRef, prevClientVideoId]);
@@ -125,7 +129,6 @@ const StoreToDbSyncer = ({
 
 StoreToDbSyncer.propTypes = {
   roomId: PropTypes.string,
-  desiredPlaybackState: PropTypes.oneOf(Object.values(PlaybackStates)),
   clientPlaybackState: PropTypes.oneOf(Object.values(ClientPlaybackStates)),
   usersBuffering: PropTypes.object,
   desiredSeekPosition: PropTypes.number,
@@ -136,7 +139,6 @@ StoreToDbSyncer.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   roomId: ownProps.roomId,
-  desiredPlaybackState: state.desired.playbackState,
   clientPlaybackState: state.client.playbackState,
   usersBuffering: state.room.usersBuffering,
   desiredSeekPosition: state.desired.seekPosition,

@@ -19,12 +19,12 @@ const client = combineReducers({
   playbackState: handleAction(
     clientActionCreators.setPlaybackState,
     (state, { payload: { playbackState } }) => playbackState,
-    ClientPlaybackStates.PAUSED
+    null
   ),
   seekPosition: handleAction(
     clientActionCreators.seekTo,
     (state, { payload: { seekPosition } }) => seekPosition,
-    0
+    null
   ),
   videoId: handleAction(
     clientActionCreators.setVideoId,
