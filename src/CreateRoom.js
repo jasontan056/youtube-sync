@@ -25,7 +25,12 @@ export default function CreateRoom() {
 
   return (
     <div>
-      <button onClick={createRoom}> Create a room</button>
+      <button
+        onClick={createRoom}
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+      >
+        Create a room
+      </button>
     </div>
   );
 }
