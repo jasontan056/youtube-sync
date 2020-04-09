@@ -10,9 +10,6 @@ const SEEK_THRESHOLD_SECONDS = 1.5;
 const SEEK_POLL_INTERVAL = 500;
 // When loading a video, we will retry to play the video at this interval.
 const PLAY_RETRY_INTERVAL = 500;
-// Changes in state  are delayed this amount to batch up changes and reduce weird
-// transition states.
-const STATE_CHANGE_DELAY = 200;
 // Margin of acceptable error between expected and actual current video position.
 // Needs to be relatively high because of weirdness when the page isn't in focus.
 const MARGIN = 1500;
@@ -29,8 +26,6 @@ export default function Youtube({
   videoId = "",
   playbackState = PlaybackStates.PAUSED,
   seekPosition = 0,
-  width = 640,
-  height = 480,
 }) {
   const prevVideoId = usePrevious(videoId);
   const prevPlaybackState = usePrevious(playbackState);
