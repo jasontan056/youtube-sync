@@ -1,16 +1,31 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import Firebase from "./Firebase";
+import { Redirect } from "react-router-dom";
 
 export default function CreateRoom() {
-  const db = Firebase.database();
+  const [roomId, setRoomId] = useState(null);
+
+  const createRoom = () => {
+    const roomRef = Firebase.database().ref("room");
+    const newRoomRef = roomRef.push();
+    newRoomRef
+      .set({
+        videoId: "eXf0hnC1cuE",
+        playbackState: "PAUSED",
+        seekPosition: 0,
+      })
+      .then(() => {
+        setRoomId(newRoomRef.key);
+      });
+  };
+
+  if (roomId) {
+    return <Redirect push to={`/room/${roomId}`} />;
+  }
+
   return (
     <div>
-      <p>create room page</p>
-      <input
-        className="bg-white focus:outline-none focus:shadow-outline border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal"
-        type="text"
-        placeholder="Room Name"
-      ></input>
+      <button onClick={createRoom}> Create a room</button>
     </div>
   );
 }
