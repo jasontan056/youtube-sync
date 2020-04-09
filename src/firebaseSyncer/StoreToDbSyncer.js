@@ -29,6 +29,10 @@ const StoreToDbSyncer = ({
 
   useEffect(() => {
     setRoomRef(Firebase.database().ref(`room/${roomId}`));
+    const memberRef = Firebase.database().ref(`members/${roomId}`).push();
+    setUserId(memberRef.key);
+    memberRef.onDisconnect().remove();
+    memberRef.set(true);
   }, [roomId]);
 
   const updateState = useCallback(() => {
@@ -53,26 +57,20 @@ const StoreToDbSyncer = ({
         Object.assign(updates, { playbackState: PlaybackStates.PAUSED });
         break;
       case ClientPlaybackStates.BUFFERING:
-        if (!userId) {
-          const userBufferRef = roomRef.child("usersBuffering").push();
-          userBufferRef.onDisconnect().remove();
-          Object.assign(updates, {
-            usersBuffering: {
-              [userBufferRef.key]: true,
-            },
-          });
-          setUserId(userBufferRef.key);
-        }
+        const userBufferRef = roomRef.child(`usersBuffering/${userId}`);
+        userBufferRef.onDisconnect().remove();
+        Object.assign(updates, {
+          usersBuffering: {
+            [userBufferRef.key]: true,
+          },
+        });
         break;
       case ClientPlaybackStates.WAITING:
-        if (userId) {
-          Object.assign(updates, {
-            usersBuffering: {
-              [userId]: null,
-            },
-          });
-          setUserId(null);
-        }
+        Object.assign(updates, {
+          usersBuffering: {
+            [userId]: null,
+          },
+        });
         break;
       default:
         console.log("Client is in OTHER state");
